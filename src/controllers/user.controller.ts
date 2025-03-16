@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/user.service";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 export class UserController {
   static async register(req: Request, res: Response): Promise<void> {
@@ -32,8 +33,11 @@ export class UserController {
         return;
       }
 
-      // Here you would check if the password matches (e.g., bcrypt.compare)
-      // For simplicity, I’ll skip password checking in this example.
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      if (!isPasswordCorrect) {
+        res.status(404).json({ message: "Password is incorrect" });
+        return;
+      }
 
       // Generate JWT token (you can expand this logic later)
       const token = jwt.sign(
@@ -46,5 +50,10 @@ export class UserController {
     } catch (error) {
       res.status(500).json({ message: "Error logging in" });
     }
+  }
+
+  static async getUsers(req: Request, res: Response) {
+    const users = await UserService.getUsers();
+    res.status(200).json(users);
   }
 }
